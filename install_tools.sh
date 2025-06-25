@@ -57,7 +57,7 @@ declare -A go_tools=(
     [smuggles]="github.com/danielthatcher/smuggles@latest"
     [dalfox]="github.com/hahwul/dalfox/v2@latest"
 )
-for tool in "${(@k)go_tools}"; do
+for tool in ${(k)go_tools}; do
     if ! command -v $tool &> /dev/null; then
         go install "${go_tools[$tool]}"
     else

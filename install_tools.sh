@@ -160,12 +160,29 @@ mkdir -p "$TOOLS_DIR/trufflehog"
 # --- GITLEAKS (BINARY) ---
 echo "* Cài Gitleaks..."
 if ! command -v gitleaks &> /dev/null; then
-    git clone https://github.com/gitleaks/gitleaks.git "$TOOLS_DIR/gitleaks-src"
-    cd "$TOOLS_DIR/gitleaks-src"
+    # Thư mục chứa mã nguồn và binary
+    GITLEAKS_SRC="$TOOLS_DIR/gitleaks-src"
+    GITLEAKS_BIN="$TOOLS_DIR/gitleaks"
+
+    # Xóa mã nguồn cũ nếu có
+    [ -d "$GITLEAKS_SRC" ] && rm -rf "$GITLEAKS_SRC"
+
+    # Clone mã nguồn Gitleaks
+    git clone https://github.com/gitleaks/gitleaks.git "$GITLEAKS_SRC"
+
+    # Build Gitleaks
+    cd "$GITLEAKS_SRC"
     make build
-    cp ./gitleaks "$TOOLS_DIR/gitleaks"
-    chmod +x "$TOOLS_DIR/gitleaks"
-    sudo ln -sf "$TOOLS_DIR/gitleaks" /usr/local/bin/gitleaks
+
+    # Copy binary ra thư mục tools và phân quyền
+    cp ./gitleaks "$GITLEAKS_BIN"
+    chmod +x "$GITLEAKS_BIN"
+
+    # Tạo symlink vào /usr/local/bin
+    sudo ln -sf "$GITLEAKS_BIN" /usr/local/bin/gitleaks
+
+    # Quay lại thư mục tools
+    cd "$TOOLS_DIR"
 else
     echo "gitleaks đã được cài đặt"
 fi

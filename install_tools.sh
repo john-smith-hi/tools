@@ -201,11 +201,11 @@ else
 fi
 
 # --- ALIAS TOOLS ---
-echo \"* Thêm alias vào $ZSHRC...\"
-if ! grep -q \"alias tools=\" \"$ZSHRC\"; then
-    echo \"alias tools='cd ~/tools && ls'\" >> \"$ZSHRC\"
+echo "* Thêm alias tools vào $ZSHRC..."
+if ! grep -q "alias tools=" "$ZSHRC"; then
+    echo "alias tools='ls $TOOLS_DIR'" >> "$ZSHRC"
 else
-    echo \"Alias tools đã tồn tại trong $ZSHRC\"
+    echo "Alias tools đã tồn tại trong $ZSHRC"
 fi
 
 source \"$ZSHRC\"

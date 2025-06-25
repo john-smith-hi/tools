@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/bin/zsh
 if ! grep -q "alias auto_scan=" ~/.zshrc; then
-    echo "alias auto_scan='bash ~/tools/auto_scan.sh'" >> ~/.zshrc
+    echo "alias auto_scan='zsh ~/tools/auto_scan.sh'" >> ~/.zshrc
 fi
 usage() {
     echo "Usage:"
@@ -9,10 +9,10 @@ usage() {
     exit 1
 }
 
-if [ "$1" == "-u" ]; then
-    domains=("$2")
-elif [ "$1" == "-d" ]; then
-    mapfile -t domains < "$2"
+if [[ "$1" == "-u" ]]; then
+    domains=($2)
+elif [[ "$1" == "-d" ]]; then
+    domains=($(<"$2"))
 else
     usage
 fi
@@ -21,7 +21,7 @@ TOOLS_DIR=~/tools
 RECONS_DIR=~/recons
 mkdir -p "$RECONS_DIR"
 
-for domain in "${domains[@]}"; do
+for domain in $domains; do
     TARGET_DIR="$RECONS_DIR/$domain"
     mkdir -p "$TARGET_DIR"
     cd "$TARGET_DIR"

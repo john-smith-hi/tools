@@ -16,11 +16,14 @@
 # 6. 403 Bypass:
 #    - bypass-403, nomore403, 4-ZERO-3
 # 7. Support/Dependency:
-#    - ruby-full, python3-pip, git, curl, unzip, pipx
+#    - ruby-full, python3-pip, git, curl, unzip, pipx, jq
+# 8. Payloads:
+#   - Seclists
 # ===========================
 
-TOOLS_DIR=~/tools
+TOOLS_DIR=~/tools 
 ZSHRC=~/.zshrc
+PAYLOADS_DIR=~/payloads
 
 echo "* Tạo thư mục $TOOLS_DIR và chuẩn bị môi trường..."
 mkdir -p "$TOOLS_DIR"
@@ -66,7 +69,7 @@ done
 # --- APT TOOLS ---
 echo "* Cài thêm các công cụ hỗ trợ khác..."
 sudo apt update
-apt_tools=(ffuf wfuzz whatweb ruby-full python3-pip nikto git curl unzip pipx)
+apt_tools=(ffuf wfuzz whatweb ruby-full python3-pip nikto git curl unzip pipx jq)
 for tool in $apt_tools; do
     if ! command -v $tool &> /dev/null && ! dpkg -s $tool &> /dev/null; then
         sudo apt install -y $tool
@@ -188,6 +191,14 @@ else
     echo "arjun đã được cài đặt"
 fi
 mkdir -p "$TOOLS_DIR/arjun"
+
+# --- PAYLOADS ---
+echo "* Cài SecLists..."
+if [ ! -d "$PAYLOADS_DIR/SecLists" ]; then
+    git clone https://github.com/danielmiessler/SecLists.git "$PAYLOADS_DIR/SecLists"
+else
+    echo "SecLists đã được cài đặt"
+fi
 
 # --- ALIAS TOOLS ---
 echo \"* Thêm alias vào $ZSHRC...\"

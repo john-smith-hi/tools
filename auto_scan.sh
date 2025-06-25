@@ -18,13 +18,14 @@ else
 fi
 
 TOOLS_DIR=~/tools
-RECONS_DIR=~/recons
-mkdir -p "$RECONS_DIR"
+DESKTOP_DIR=~/Desktop
+PAYLOADS_DIR=~/payloads 
+echo "* RECON ----------------"
 
 for domain in $domains; do
-    TARGET_DIR="$RECONS_DIR/$domain"
-    mkdir -p "$TARGET_DIR"
-    cd "$TARGET_DIR"
+    TARGET_RECON_DIR="$DESKTOP_DIR/$domain/recon"
+    mkdir -p "$TARGET_RECON_DIR"
+    cd "$TARGET_RECON_DIR"
 
     # 1. Subdomain Enumeration
     echo "[*] subfinder..."
@@ -76,5 +77,56 @@ for domain in $domains; do
     sort -u -o http_subdomain.txt http_subdomain.txt
     sort -u -o https_subdomain.txt https_subdomain.txt
 
-    echo "[*] Done for $domain. Kết quả lưu tại $TARGET_DIR"
+    # 6. Crawling & URL Gathering
+    echo "[*] hakrawler..."
+    cat http_subdomain.txt https_subdomain.txt | hakrawler > hakrawler.txt
+
+    echo "[*] katana..."
+    katana -list http_subdomain.txt -o katana.txt
+
+    echo "[*] waybackurls..."
+    cat http_subdomain.txt https_subdomain.txt | waybackurls > waybackurls.txt
+
+    echo "[*] gau..."
+    cat http_subdomain.txt https_subdomain.txt | gau > gau.txt
+
+    # echo "[*] ffuf..."
+    # ffuf -u 'FUZZ' -w "$TOOLS_DIR/wordlists/all.txt" -of csv -o ffuf.csv -mc all -t 50 -timeout 5
+    # awk -F',' 'NR>1{print $1}' ffuf.csv > ffuf.txt
+
+    # echo "[*] wfuzz..."
+    # wfuzz -c -w "$TOOLS_DIR/wordlists/all.txt" --sc 200,301,302,403 --hh 0 -u 'FUZZ' --output-file wfuzz.txt
+
+    echo "[*] dirsearch..."
+    python3 "$TOOLS_DIR/dirsearch/dirsearch.py" -u "$(head -n 1 http_subdomain.txt)" -e * -o dirsearch.txt --format plain
+
+    # 7. Tổng hợp URL, lọc trùng, gom nhóm
+    cat hakrawler.txt katana.txt waybackurls.txt gau.txt ffuf.txt wfuzz.txt dirsearch.txt 2>/dev/null | \
+        grep -Eo 'https?://[^ ]+' | sort -u > all_url_raw.txt
+
+    # Lọc lại qua httpx
+    echo "[*] Lọc lại URL qua httpx..."
+    httpx -l all_url_raw.txt -o all_url_httpx.txt -silent
+
+    # Lọc lại qua httprobe
+    echo "[*] Lọc lại URL qua httprobe..."
+    cat all_url_raw.txt | httprobe > all_url_httprobe.txt
+
+    # Tổng hợp kết quả đã lọc
+    cat all_url_httpx.txt all_url_httprobe.txt | sort -u > all_url.txt
+
+    echo "[*] Gom nhóm các URL gần giống nhau..."
+    awk -F/ '{
+        domain=$3;
+        path="/"$4"/"$5"/"$6;
+        group[domain path] = group[domain path] ? group[domain path] ORS $0 : $0
+    }
+    END {
+        for (g in group) {
+            print "# Group: " g;
+            print group[g] "\n";
+        }
+    }' all_url.txt > all_url_grouped.txt
+
+    echo "[*] Recon done for $domain. Kết quả lưu tại $TARGET_RECON_DIR"
 done

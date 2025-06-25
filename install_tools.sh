@@ -22,12 +22,12 @@
 TOOLS_DIR=~/tools
 ZSHRC=~/.zshrc
 
-echo "[*] Tạo thư mục $TOOLS_DIR và chuẩn bị môi trường..."
+echo "* Tạo thư mục $TOOLS_DIR và chuẩn bị môi trường..."
 mkdir -p "$TOOLS_DIR"
 cd "$TOOLS_DIR"
 
 # --- GO ENVIRONMENT ---
-echo "[*] Kiểm tra và cài đặt Go nếu cần..."
+echo "* Kiểm tra và cài đặt Go nếu cần..."
 if ! command -v go &> /dev/null; then
     wget -q https://go.dev/dl/go1.22.3.linux-amd64.tar.gz
     sudo tar -C /usr/local -xzf go1.22.3.linux-amd64.tar.gz
@@ -37,7 +37,7 @@ if ! command -v go &> /dev/null; then
 fi
 
 # --- GO TOOLS ---
-echo "[*] Cài các tool viết bằng Go..."
+echo "* Cài các tool viết bằng Go..."
 declare -A go_tools=(
     [subfinder]="github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest"
     [assetfinder]="github.com/tomnomnom/assetfinder@latest"
@@ -64,7 +64,7 @@ for tool in ${(k)go_tools}; do
 done
 
 # --- APT TOOLS ---
-echo "[*] Cài thêm các công cụ hỗ trợ khác..."
+echo "* Cài thêm các công cụ hỗ trợ khác..."
 sudo apt update
 apt_tools=(ffuf wfuzz whatweb ruby-full python3-pip nikto git curl unzip pipx)
 for tool in $apt_tools; do
@@ -77,7 +77,7 @@ for tool in $apt_tools; do
 done
 
 # --- RUBY GEM TOOLS ---
-echo "[*] Cài wpscan..."
+echo "* Cài wpscan..."
 if ! command -v wpscan &> /dev/null; then
     sudo gem install wpscan
 else
@@ -100,38 +100,38 @@ clone_and_alias() {
 }
 
 # --- PYTHON TOOLS & VULN SCANNERS ---
-echo "[*] Cài CMSeeK..."
+echo "* Cài CMSeeK..."
 clone_and_alias "https://github.com/Tuhinshubhra/CMSeeK.git" "CMSeeK" "cmseek" "alias cmseek='python3 ~/tools/CMSeeK/cmseek.py'"
 pip3 install --break-system-packages -r "$TOOLS_DIR/CMSeeK/requirements.txt"
 
-echo "[*] Cài dirsearch..."
+echo "* Cài dirsearch..."
 clone_and_alias "https://github.com/maurosoria/dirsearch.git" "dirsearch" "dirsearch" "alias dirsearch='python3 ~/tools/dirsearch/dirsearch.py'"
 
-echo "[*] Cài SecretFinder..."
+echo "* Cài SecretFinder..."
 clone_and_alias "https://github.com/m4ll0k/SecretFinder.git" "SecretFinder" "secretfinder" "alias secretfinder='python3 ~/tools/SecretFinder/SecretFinder.py'"
 pip3 install --break-system-packages -r "$TOOLS_DIR/SecretFinder/requirements.txt"
 
-echo "[*] Cài Corsy..."
+echo "* Cài Corsy..."
 clone_and_alias "https://github.com/s0md3v/Corsy.git" "Corsy" "corsy" "alias corsy='python3 ~/tools/Corsy/corsy.py'"
 pip3 install --break-system-packages -r "$TOOLS_DIR/Corsy/requirements.txt"
 
-echo "[*] Cài CRLF-Injection-Scanner..."
+echo "* Cài CRLF-Injection-Scanner..."
 clone_and_alias "https://github.com/MichaelStott/CRLF-Injection-Scanner.git" "CRLF-Injection-Scanner" "crlfscanner" "alias crlfscanner='python3 ~/tools/CRLF-Injection-Scanner/crlf.py'"
-pip3 install --break-system-packages -r "$TOOLS_DIR/CRLF-Injection-Scanner/requirements.txt"
+python3 "$TOOLS_DIR/CRLF-Injection-Scanner/setup.py" install
 
-echo "[*] Cài dnsdumpster tool..."
+echo "* Cài dnsdumpster tool..."
 clone_and_alias "https://github.com/PaulSec/API-dnsdumpster.com.git" "dnsdumpster" "dnsdumpster" "alias dnsdumpster='python3 ~/tools/dnsdumpster/dnsdumpster.py'"
-pip3 install --break-system-packages -r "$TOOLS_DIR/dnsdumpster/requirements.txt"
+python3 "$TOOLS_DIR/dnsdumpster/setup.py" install
 
-echo "[*] Cài XSStrike..."
+echo "* Cài XSStrike..."
 clone_and_alias "https://github.com/s0md3v/XSStrike.git" "XSStrike" "xsstrike" "alias xsstrike='python3 ~/tools/XSStrike/xsstrike.py'"
 pip3 install --break-system-packages -r "$TOOLS_DIR/XSStrike/requirements.txt"
 
-echo "[*] Cài sqlmap..."
+echo "* Cài sqlmap..."
 clone_and_alias "https://github.com/sqlmapproject/sqlmap.git" "sqlmap" "sqlmap" "alias sqlmap='python3 ~/tools/sqlmap/sqlmap.py'"
 
 # --- TRUFFLEHOG (pipx) ---
-echo "[*] Cài truffleHog..."
+echo "* Cài truffleHog..."
 if ! command -v trufflehog &> /dev/null; then
     pipx install trufflehog
 else
@@ -140,29 +140,26 @@ fi
 mkdir -p "$TOOLS_DIR/trufflehog"
 
 # --- GITLEAKS (BINARY) ---
-echo "[*] Cài Gitleaks..."
+echo "* Cài Gitleaks..."
 if ! command -v gitleaks &> /dev/null; then
-    latest_url=$(curl -s https://api.github.com/repos/gitleaks/gitleaks/releases/latest | grep "browser_download_url" | grep "linux_amd64" | cut -d '"' -f 4 | head -n 1)
-    if [ -n "$latest_url" ]; then
-        wget -q $latest_url -O gitleaks
-        chmod +x gitleaks
-        mv gitleaks "$TOOLS_DIR/"
-        sudo ln -sf "$TOOLS_DIR/gitleaks" /usr/local/bin/gitleaks
-    else
-        echo "Không lấy được link tải Gitleaks!"
-    fi
+    git clone https://github.com/gitleaks/gitleaks.git "$TOOLS_DIR/gitleaks-src"
+    cd "$TOOLS_DIR/gitleaks-src"
+    make build
+    cp ./gitleaks "$TOOLS_DIR/gitleaks"
+    chmod +x "$TOOLS_DIR/gitleaks"
+    sudo ln -sf "$TOOLS_DIR/gitleaks" /usr/local/bin/gitleaks
 else
     echo "gitleaks đã được cài đặt"
 fi
 
 # --- BYPASS 403 TOOLS ---
-echo \"[*] Cài các tool bypass 403...\"
+echo \"* Cài các tool bypass 403...\"
 clone_and_alias \"https://github.com/iamj0ker/bypass-403.git\" \"bypass-403\" \"bypass403\" \"alias bypass403='bash ~/tools/bypass-403/bypass-403.sh'\"
 clone_and_alias \"https://github.com/devploit/nomore403.git\" \"nomore403\" \"nomore403\" \"alias nomore403='bash ~/tools/nomore403/nomore403.sh'\"
 clone_and_alias \"https://github.com/Dheerajmadhukar/4-ZERO-3.git\" \"4-ZERO-3\" \"zero403\" \"alias zero403='bash ~/tools/4-ZERO-3/403.sh'\"
 
 # --- FINDOMAIN (BINARY) ---
-echo \"[*] Cài findomain...\"
+echo \"* Cài findomain...\"
 if ! command -v findomain &> /dev/null; then
     wget -q https://github.com/findomain/findomain/releases/latest/download/findomain-linux.zip -O findomain-linux.zip
     unzip -q findomain-linux.zip
@@ -175,7 +172,7 @@ else
 fi
 
 # --- MASSDNS ---
-echo \"[*] Cài massdns...\"
+echo \"* Cài massdns...\"
 if [ ! -d \"$TOOLS_DIR/massdns\" ]; then
     git clone https://github.com/blechschmidt/massdns.git \"$TOOLS_DIR/massdns\"
     cd \"$TOOLS_DIR/massdns\" && make && sudo make install
@@ -184,7 +181,7 @@ else
     echo \"massdns đã được cài đặt\"
 fi
 
-echo "[*] Cài arjun (pipx)..."
+echo "* Cài arjun (pipx)..."
 if ! command -v arjun &> /dev/null; then
     pipx install arjun
 else
@@ -193,7 +190,7 @@ fi
 mkdir -p "$TOOLS_DIR/arjun"
 
 # --- ALIAS TOOLS ---
-echo \"[*] Thêm alias vào $ZSHRC...\"
+echo \"* Thêm alias vào $ZSHRC...\"
 if ! grep -q \"alias tools=\" \"$ZSHRC\"; then
     echo \"alias tools='cd ~/tools && ls'\" >> \"$ZSHRC\"
 else

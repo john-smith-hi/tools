@@ -8,7 +8,7 @@
 # 2. DNS Tools:
 #    - dnsx, massdns, dnsdumpster
 # 3. HTTP/Web Tools:
-#    - httpx, httprobe, hakrawler, katana, waybackurls, gau, ffuf, wfuzz, whatweb, nikto, dirsearch, Corsy, CRLF-Injection-Scanner, smuggles, XSStrike, dalfox, sqlmap, arjun
+#    - httpx, httprobe, hakrawler, katana, waybackurls, gau, ffuf, wfuzz, whatweb, nikto, dirsearch, Corsy, CRLF-Injection-Scanner, smuggles
 # 4. Vulnerability Scanners:
 #    - nuclei, wpscan, CMSeeK
 # 5. Source Code Security:
@@ -17,10 +17,13 @@
 #    - bypass-403, nomore403, 4-ZERO-3
 # 7. Support/Dependency:
 #    - ruby-full, python3-pip, git, curl, unzip, pipx, jq
+# 8. Payloads:
+#   - Seclists
 # ===========================
 
 TOOLS_DIR=~/tools
 ZSHRC=~/.zshrc
+PAYLOADS_DIR=~/payloads
 
 echo "* Update các tool Go..."
 declare -A go_tools=(
@@ -90,20 +93,24 @@ for tool in $pipx_tools; do
 done
 
 echo "* Update gitleaks..."
-if [ -d "$TOOLS_DIR/gitleaks-src/.git" ]; then
-    cd "$TOOLS_DIR/gitleaks-src"
+GITLEAKS_SRC="$TOOLS_DIR/gitleaks-src"
+GITLEAKS_BIN="$TOOLS_DIR/gitleaks"
+if [ -d "$GITLEAKS_SRC/.git" ]; then
+    cd "$GITLEAKS_SRC"
     git pull
     make build
-    cp ./gitleaks "$TOOLS_DIR/gitleaks"
-    chmod +x "$TOOLS_DIR/gitleaks"
-    sudo ln -sf "$TOOLS_DIR/gitleaks" /usr/local/bin/gitleaks
+    cp ./gitleaks "$GITLEAKS_BIN"
+    chmod +x "$GITLEAKS_BIN"
+    sudo ln -sf "$GITLEAKS_BIN" /usr/local/bin/gitleaks
+    cd "$TOOLS_DIR"
 else
-    git clone https://github.com/gitleaks/gitleaks.git "$TOOLS_DIR/gitleaks-src"
-    cd "$TOOLS_DIR/gitleaks-src"
+    git clone https://github.com/gitleaks/gitleaks.git "$GITLEAKS_SRC"
+    cd "$GITLEAKS_SRC"
     make build
-    cp ./gitleaks "$TOOLS_DIR/gitleaks"
-    chmod +x "$TOOLS_DIR/gitleaks"
-    sudo ln -sf "$TOOLS_DIR/gitleaks" /usr/local/bin/gitleaks
+    cp ./gitleaks "$GITLEAKS_BIN"
+    chmod +x "$GITLEAKS_BIN"
+    sudo ln -sf "$GITLEAKS_BIN" /usr/local/bin/gitleaks
+    cd "$TOOLS_DIR"
 fi
 
 echo "* Update findomain..."
@@ -127,6 +134,13 @@ echo "* Build lại massdns nếu có thay đổi..."
 if [ -d "$TOOLS_DIR/massdns/.git" ]; then
     cd "$TOOLS_DIR/massdns" && make && sudo make install
     cd "$TOOLS_DIR"
+fi
+
+echo "* Update SecLists payloads..."
+if [ -d "$PAYLOADS_DIR/SecLists/.git" ]; then
+    cd "$PAYLOADS_DIR/SecLists" && git pull
+else
+    git clone https://github.com/danielmiessler/SecLists.git "$PAYLOADS_DIR/SecLists"
 fi
 
 echo "* Đã update xong toàn bộ tool!"

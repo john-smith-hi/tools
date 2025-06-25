@@ -12,7 +12,7 @@
 # 4. Vulnerability Scanners:
 #    - nuclei, wpscan, CMSeeK
 # 5. Source Code Security:
-#    - github-dorks, SecretFinder, trufflehog, gitleaks
+#    - SecretFinder, trufflehog, gitleaks
 # 6. 403 Bypass:
 #    - bypass-403, nomore403, 4-ZERO-3
 # 7. Support/Dependency:
@@ -52,7 +52,6 @@ declare -A go_tools=(
     [katana]="github.com/projectdiscovery/katana/cmd/katana@latest"
     [waybackurls]="github.com/tomnomnom/waybackurls@latest"
     [nuclei]="github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest"
-    [github-dorks]="github.com/hahwul/github-dorks@latest"
     [shuffledns]="github.com/projectdiscovery/shuffledns/cmd/shuffledns@latest"
     [smuggles]="github.com/danielthatcher/smuggles@latest"
     [dalfox]="github.com/hahwul/dalfox/v2@latest"

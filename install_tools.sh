@@ -190,13 +190,13 @@ else
 fi
 
 # --- BYPASS 403 TOOLS ---
-echo \"* Cài các tool bypass 403...\"
+echo "[*] Cài các tool bypass 403..."
 clone_and_alias \"https://github.com/iamj0ker/bypass-403.git\" \"bypass-403\" \"bypass403\" \"alias bypass403='bash ~/tools/bypass-403/bypass-403.sh'\"
 clone_and_alias \"https://github.com/devploit/nomore403.git\" \"nomore403\" \"nomore403\" \"alias nomore403='bash ~/tools/nomore403/nomore403.sh'\"
 clone_and_alias \"https://github.com/Dheerajmadhukar/4-ZERO-3.git\" \"4-ZERO-3\" \"zero403\" \"alias zero403='bash ~/tools/4-ZERO-3/403.sh'\"
 
 # --- FINDOMAIN (BINARY) ---
-echo \"* Cài findomain...\"
+echo "[*] Cài findomain..."
 if ! command -v findomain &> /dev/null; then
     wget -q https://github.com/findomain/findomain/releases/latest/download/findomain-linux.zip -O findomain-linux.zip
     unzip -q findomain-linux.zip
@@ -209,7 +209,7 @@ else
 fi
 
 # --- MASSDNS ---
-echo \"* Cài massdns...\"
+echo "[*] Cài massdns..."
 if [ ! -d \"$TOOLS_DIR/massdns\" ]; then
     git clone https://github.com/blechschmidt/massdns.git \"$TOOLS_DIR/massdns\"
     cd \"$TOOLS_DIR/massdns\" && make && sudo make install

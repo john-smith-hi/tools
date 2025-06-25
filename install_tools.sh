@@ -97,39 +97,54 @@ clone_and_alias() {
     if [ ! -d "$TOOLS_DIR/$dir" ]; then
         git clone "$repo" "$TOOLS_DIR/$dir"
         [ -n "$cmd" ] && grep -qxF "$cmd" "$ZSHRC" || echo "$cmd" >> "$ZSHRC"
+        return 0    # mới clone, cần cài req
     else
         echo "$dir đã được cài đặt"
+        return 1    # đã clone, không cần cài req
     fi
 }
 
-# --- PYTHON TOOLS & VULN SCANNERS ---
+# CMSeeK
 echo "* Cài CMSeeK..."
-clone_and_alias "https://github.com/Tuhinshubhra/CMSeeK.git" "CMSeeK" "cmseek" "alias cmseek='python3 ~/tools/CMSeeK/cmseek.py'"
-pip3 install --break-system-packages -r "$TOOLS_DIR/CMSeeK/requirements.txt"
+if clone_and_alias "https://github.com/Tuhinshubhra/CMSeeK.git" "CMSeeK" "cmseek" "alias cmseek='python3 ~/tools/CMSeeK/cmseek.py'"; then
+    pip3 install --break-system-packages -r "$TOOLS_DIR/CMSeeK/requirements.txt"
+fi
 
+# dirsearch (không cần pip)
 echo "* Cài dirsearch..."
 clone_and_alias "https://github.com/maurosoria/dirsearch.git" "dirsearch" "dirsearch" "alias dirsearch='python3 ~/tools/dirsearch/dirsearch.py'"
 
+# SecretFinder
 echo "* Cài SecretFinder..."
-clone_and_alias "https://github.com/m4ll0k/SecretFinder.git" "SecretFinder" "secretfinder" "alias secretfinder='python3 ~/tools/SecretFinder/SecretFinder.py'"
-pip3 install --break-system-packages -r "$TOOLS_DIR/SecretFinder/requirements.txt"
+if clone_and_alias "https://github.com/m4ll0k/SecretFinder.git" "SecretFinder" "secretfinder" "alias secretfinder='python3 ~/tools/SecretFinder/SecretFinder.py'"; then
+    pip3 install --break-system-packages -r "$TOOLS_DIR/SecretFinder/requirements.txt"
+fi
 
+# Corsy
 echo "* Cài Corsy..."
-clone_and_alias "https://github.com/s0md3v/Corsy.git" "Corsy" "corsy" "alias corsy='python3 ~/tools/Corsy/corsy.py'"
-pip3 install --break-system-packages -r "$TOOLS_DIR/Corsy/requirements.txt"
+if clone_and_alias "https://github.com/s0md3v/Corsy.git" "Corsy" "corsy" "alias corsy='python3 ~/tools/Corsy/corsy.py'"; then
+    pip3 install --break-system-packages -r "$TOOLS_DIR/Corsy/requirements.txt"
+fi
 
+# CRLF-Injection-Scanner
 echo "* Cài CRLF-Injection-Scanner..."
-clone_and_alias "https://github.com/MichaelStott/CRLF-Injection-Scanner.git" "CRLF-Injection-Scanner" "crlfscanner" "alias crlfscanner='python3 ~/tools/CRLF-Injection-Scanner/crlf.py'"
-python3 "$TOOLS_DIR/CRLF-Injection-Scanner/setup.py" install
+if clone_and_alias "https://github.com/MichaelStott/CRLF-Injection-Scanner.git" "CRLF-Injection-Scanner" "crlfscanner" "alias crlfscanner='python3 ~/tools/CRLF-Injection-Scanner/crlf.py'"; then
+    python3 "$TOOLS_DIR/CRLF-Injection-Scanner/setup.py" install
+fi
 
+# dnsdumpster
 echo "* Cài dnsdumpster tool..."
-clone_and_alias "https://github.com/PaulSec/API-dnsdumpster.com.git" "dnsdumpster" "dnsdumpster" "alias dnsdumpster='python3 ~/tools/dnsdumpster/dnsdumpster.py'"
-python3 "$TOOLS_DIR/dnsdumpster/setup.py" install
+if clone_and_alias "https://github.com/PaulSec/API-dnsdumpster.com.git" "dnsdumpster" "dnsdumpster" "alias dnsdumpster='python3 ~/tools/dnsdumpster/dnsdumpster.py'"; then
+    python3 "$TOOLS_DIR/dnsdumpster/setup.py" install
+fi
 
+# XSStrike
 echo "* Cài XSStrike..."
-clone_and_alias "https://github.com/s0md3v/XSStrike.git" "XSStrike" "xsstrike" "alias xsstrike='python3 ~/tools/XSStrike/xsstrike.py'"
-pip3 install --break-system-packages -r "$TOOLS_DIR/XSStrike/requirements.txt"
+if clone_and_alias "https://github.com/s0md3v/XSStrike.git" "XSStrike" "xsstrike" "alias xsstrike='python3 ~/tools/XSStrike/xsstrike.py'"; then
+    pip3 install --break-system-packages -r "$TOOLS_DIR/XSStrike/requirements.txt"
+fi
 
+# sqlmap (không cần pip)
 echo "* Cài sqlmap..."
 clone_and_alias "https://github.com/sqlmapproject/sqlmap.git" "sqlmap" "sqlmap" "alias sqlmap='python3 ~/tools/sqlmap/sqlmap.py'"
 
@@ -179,7 +194,6 @@ echo \"* Cài massdns...\"
 if [ ! -d \"$TOOLS_DIR/massdns\" ]; then
     git clone https://github.com/blechschmidt/massdns.git \"$TOOLS_DIR/massdns\"
     cd \"$TOOLS_DIR/massdns\" && make && sudo make install
-    cd \"$TOOLS_DIR\"
 else
     echo \"massdns đã được cài đặt\"
 fi

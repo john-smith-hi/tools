@@ -53,7 +53,7 @@ declare -A go_tools=(
     [waybackurls]="github.com/tomnomnom/waybackurls@latest"
     [nuclei]="github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest"
     [github-dorks]="github.com/hahwul/github-dorks@latest"
-    [shuffledns]="github.com/projectdiscovery/shuffledns@latest"
+    [shuffledns]="github.com/projectdiscovery/shuffledns/cmd/shuffledns@latest"
     [smuggles]="github.com/danielthatcher/smuggles@latest"
     [dalfox]="github.com/hahwul/dalfox/v2@latest"
 )

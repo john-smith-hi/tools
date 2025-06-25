@@ -109,23 +109,23 @@ clone_and_alias "https://github.com/maurosoria/dirsearch.git" "dirsearch" "dirse
 
 echo "[*] Cài SecretFinder..."
 clone_and_alias "https://github.com/m4ll0k/SecretFinder.git" "SecretFinder" "secretfinder" "alias secretfinder='python3 ~/tools/SecretFinder/SecretFinder.py'"
-pip3 install -r "$TOOLS_DIR/SecretFinder/requirements.txt"
+pip3 install --break-system-packages -r "$TOOLS_DIR/SecretFinder/requirements.txt"
 
 echo "[*] Cài Corsy..."
 clone_and_alias "https://github.com/s0md3v/Corsy.git" "Corsy" "corsy" "alias corsy='python3 ~/tools/Corsy/corsy.py'"
-pip3 install -r "$TOOLS_DIR/Corsy/requirements.txt"
+pip3 install --break-system-packages -r "$TOOLS_DIR/Corsy/requirements.txt"
 
 echo "[*] Cài CRLF-Injection-Scanner..."
 clone_and_alias "https://github.com/MichaelStott/CRLF-Injection-Scanner.git" "CRLF-Injection-Scanner" "crlfscanner" "alias crlfscanner='python3 ~/tools/CRLF-Injection-Scanner/crlf.py'"
-pip3 install -r "$TOOLS_DIR/CRLF-Injection-Scanner/requirements.txt"
+pip3 install --break-system-packages -r "$TOOLS_DIR/CRLF-Injection-Scanner/requirements.txt"
 
 echo "[*] Cài dnsdumpster tool..."
 clone_and_alias "https://github.com/PaulSec/API-dnsdumpster.com.git" "dnsdumpster" "dnsdumpster" "alias dnsdumpster='python3 ~/tools/dnsdumpster/dnsdumpster.py'"
-pip3 install -r "$TOOLS_DIR/dnsdumpster/requirements.txt"
+pip3 install --break-system-packages -r "$TOOLS_DIR/dnsdumpster/requirements.txt"
 
 echo "[*] Cài XSStrike..."
 clone_and_alias "https://github.com/s0md3v/XSStrike.git" "XSStrike" "xsstrike" "alias xsstrike='python3 ~/tools/XSStrike/xsstrike.py'"
-pip3 install -r "$TOOLS_DIR/XSStrike/requirements.txt"
+pip3 install --break-system-packages -r "$TOOLS_DIR/XSStrike/requirements.txt"
 
 echo "[*] Cài sqlmap..."
 clone_and_alias "https://github.com/sqlmapproject/sqlmap.git" "sqlmap" "sqlmap" "alias sqlmap='python3 ~/tools/sqlmap/sqlmap.py'"
@@ -142,13 +142,17 @@ mkdir -p "$TOOLS_DIR/trufflehog"
 # --- GITLEAKS (BINARY) ---
 echo "[*] Cài Gitleaks..."
 if ! command -v gitleaks &> /dev/null; then
-        latest_url=$(curl -s https://api.github.com/repos/gitleaks/gitleaks/releases/latest | grep "browser_download_url" | grep "linux_amd64" | cut -d '"' -f 4 | head -n 1)
-    wget -q $latest_url -O gitleaks
-    chmod +x gitleaks
-    mv gitleaks \"$TOOLS_DIR/\"
-    sudo ln -sf \"$TOOLS_DIR/gitleaks\" /usr/local/bin/gitleaks
+    latest_url=$(curl -s https://api.github.com/repos/gitleaks/gitleaks/releases/latest | grep "browser_download_url" | grep "linux_amd64" | cut -d '"' -f 4 | head -n 1)
+    if [ -n "$latest_url" ]; then
+        wget -q $latest_url -O gitleaks
+        chmod +x gitleaks
+        mv gitleaks "$TOOLS_DIR/"
+        sudo ln -sf "$TOOLS_DIR/gitleaks" /usr/local/bin/gitleaks
+    else
+        echo "Không lấy được link tải Gitleaks!"
+    fi
 else
-    echo \"gitleaks đã được cài đặt\"
+    echo "gitleaks đã được cài đặt"
 fi
 
 # --- BYPASS 403 TOOLS ---

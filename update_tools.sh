@@ -19,10 +19,12 @@
 #    - ruby-full, python3-pip, git, curl, unzip, pipx
 # ===========================
 
+set -e
+
 TOOLS_DIR=~/tools
 ZSHRC=~/.zshrc
 
-# --- GO TOOLS UPDATE ---
+echo "[*] Update các tool Go..."
 declare -A go_tools=(
     [subfinder]="github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest"
     [assetfinder]="github.com/tomnomnom/assetfinder@latest"
@@ -42,36 +44,26 @@ declare -A go_tools=(
 )
 for tool in ${(k)go_tools}; do
     echo "[*] Update $tool (Go)..."
-    go install $go_tools[$tool]
+    go install "${go_tools[$tool]}"
 done
 
-# --- NUCLEI TEMPLATES UPDATE ---
 echo "[*] Update nuclei templates..."
 nuclei -update-templates
 
-# --- APT TOOLS UPDATE ---
 echo "[*] Update các tool cài qua apt..."
 sudo apt update
 apt_tools=(ffuf wfuzz whatweb ruby-full python3-pip nikto git curl unzip pipx)
-sudo apt install --only-upgrade -y $apt_tools
+for tool in $apt_tools; do
+    echo "[*] Update $tool (apt)..."
+    sudo apt install --only-upgrade -y $tool
+done
 
-# --- RUBY GEM TOOLS UPDATE ---
 echo "[*] Update wpscan (gem)..."
 sudo gem update wpscan
 
-# --- PYTHON TOOLS (CLONE) UPDATE ---
-python_tools=(
-    "CMSeeK|requirements.txt"
-    "dirsearch|"
-    "SecretFinder|requirements.txt"
-    "Corsy|requirements.txt"
-    "CRLF-Injection-Scanner|requirements.txt"
-    "dnsdumpster|requirements.txt"
-    "XSStrike|requirements.txt"
-    "sqlmap|"
-)
-for entry in $python_tools; do
-    IFS='|' read -r dir req <<< "$entry"
+clone_and_pull() {
+    local dir=$1
+    local req=$2
     if [ -d "$TOOLS_DIR/$dir/.git" ]; then
         echo "[*] Update $dir (git)..."
         git -C "$TOOLS_DIR/$dir" pull
@@ -79,16 +71,25 @@ for entry in $python_tools; do
             pip3 install --upgrade -r "$TOOLS_DIR/$dir/$req"
         fi
     fi
-done
+}
 
-# --- PIPX TOOLS UPDATE ---
+echo "[*] Update các tool Python (git clone)..."
+clone_and_pull "CMSeeK" "requirements.txt"
+clone_and_pull "dirsearch" ""
+clone_and_pull "SecretFinder" "requirements.txt"
+clone_and_pull "Corsy" "requirements.txt"
+clone_and_pull "CRLF-Injection-Scanner" "requirements.txt"
+clone_and_pull "dnsdumpster" "requirements.txt"
+clone_and_pull "XSStrike" "requirements.txt"
+clone_and_pull "sqlmap" ""
+
+echo "[*] Update các tool pipx..."
 pipx_tools=(trufflehog arjun)
 for tool in $pipx_tools; do
     echo "[*] Update $tool (pipx)..."
     pipx upgrade $tool
 done
 
-# --- GITLEAKS UPDATE ---
 echo "[*] Update gitleaks..."
 latest_url=$(curl -s https://api.github.com/repos/gitleaks/gitleaks/releases/latest | grep "browser_download_url.*linux_amd64" | cut -d '"' -f 4)
 wget -q $latest_url -O gitleaks
@@ -96,15 +97,15 @@ chmod +x gitleaks
 mv gitleaks "$TOOLS_DIR/"
 sudo ln -sf "$TOOLS_DIR/gitleaks" /usr/local/bin/gitleaks
 
-# --- FINDOMAIN UPDATE ---
 echo "[*] Update findomain..."
 wget -q https://github.com/findomain/findomain/releases/latest/download/findomain-linux.zip -O findomain-linux.zip
 unzip -q -o findomain-linux.zip
 chmod +x findomain
 mv findomain "$TOOLS_DIR/"
 rm findomain-linux.zip
+grep -qxF "alias findomain='~/tools/findomain'" "$ZSHRC" || echo "alias findomain='~/tools/findomain'" >> "$ZSHRC"
 
-# --- BYPASS 403 TOOLS UPDATE ---
+echo "[*] Update các tool bypass 403..."
 bypass_tools=(bypass-403 nomore403 4-ZERO-3)
 for dir in $bypass_tools; do
     if [ -d "$TOOLS_DIR/$dir/.git" ]; then
@@ -113,9 +114,8 @@ for dir in $bypass_tools; do
     fi
 done
 
-# --- MASSDNS BUILD ---
+echo "[*] Build lại massdns nếu có thay đổi..."
 if [ -d "$TOOLS_DIR/massdns/.git" ]; then
-    echo "[*] Build lại massdns nếu có thay đổi..."
     cd "$TOOLS_DIR/massdns" && make && sudo make install
     cd "$TOOLS_DIR"
 fi

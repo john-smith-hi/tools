@@ -102,7 +102,7 @@ clone_and_alias() {
 # --- PYTHON TOOLS & VULN SCANNERS ---
 echo "[*] Cài CMSeeK..."
 clone_and_alias "https://github.com/Tuhinshubhra/CMSeeK.git" "CMSeeK" "cmseek" "alias cmseek='python3 ~/tools/CMSeeK/cmseek.py'"
-pip3 install -r "$TOOLS_DIR/CMSeeK/requirements.txt"
+pip3 install --break-system-packages -r "$TOOLS_DIR/CMSeeK/requirements.txt"
 
 echo "[*] Cài dirsearch..."
 clone_and_alias "https://github.com/maurosoria/dirsearch.git" "dirsearch" "dirsearch" "alias dirsearch='python3 ~/tools/dirsearch/dirsearch.py'"
@@ -142,7 +142,7 @@ mkdir -p "$TOOLS_DIR/trufflehog"
 # --- GITLEAKS (BINARY) ---
 echo "[*] Cài Gitleaks..."
 if ! command -v gitleaks &> /dev/null; then
-    latest_url=$(curl -s https://api.github.com/repos/gitleaks/gitleaks/releases/latest | grep "browser_download_url.*linux_amd64" | cut -d '\"' -f 4)
+        latest_url=$(curl -s https://api.github.com/repos/gitleaks/gitleaks/releases/latest | grep "browser_download_url" | grep "linux_amd64" | cut -d '"' -f 4 | head -n 1)
     wget -q $latest_url -O gitleaks
     chmod +x gitleaks
     mv gitleaks \"$TOOLS_DIR/\"

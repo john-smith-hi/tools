@@ -19,8 +19,6 @@
 #    - ruby-full, python3-pip, git, curl, unzip, pipx
 # ===========================
 
-set -e
-
 TOOLS_DIR=~/tools
 ZSHRC=~/.zshrc
 

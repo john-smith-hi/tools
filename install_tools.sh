@@ -166,6 +166,8 @@ if ! command -v gitleaks &> /dev/null; then
 
     # Xóa mã nguồn cũ nếu có
     [ -d "$GITLEAKS_SRC" ] && rm -rf "$GITLEAKS_SRC"
+    [ -f "$GITLEAKS_BIN" ] && rm -f "$GITLEAKS_BIN"
+    [ -d "$GITLEAKS_BIN" ] && rm -rf "$GITLEAKS_BIN"
 
     # Clone mã nguồn Gitleaks
     git clone https://github.com/gitleaks/gitleaks.git "$GITLEAKS_SRC"

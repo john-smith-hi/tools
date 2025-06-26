@@ -28,7 +28,7 @@ for domain in $domains; do
     mkdir -p "$TARGET_RECON_DIR"
     cd "$TARGET_RECON_DIR"
 
-    # 1. Subdomain Enumeration
+    # Subdomain Enumeration
     echo "[*] subfinder..."
     subfinder -d "$domain" -silent -all -o subfinder.txt
 
@@ -44,19 +44,19 @@ for domain in $domains; do
     echo "[*] puredns..."
     puredns subdomain "$domain" --resolvers "$TOOLS_DIR/resolvers.txt" -w "$TOOLS_DIR/wordlists/all.txt" -o puredns.txt
 
-    # 2. DNS Tools
+    # DNS Tools
     echo "[*] dnsx..."
     dnsx -l subfinder.txt -o dnsx.txt
 
-    # 3. crt.sh
+    # crt.sh
     echo "[*] crt.sh..."
     curl -s "https://crt.sh/?q=%25.$domain&output=json" | jq -r '.[].name_value' | sed 's/\\n/\n/g' | sort -u > crtsh.txt
 
-    # 4. Tổng hợp subdomain, lọc trùng
+    # Tổng hợp subdomain, lọc trùng
     cat subfinder.txt assetfinder.txt findomain.txt shuffledns.txt puredns.txt crtsh.txt dnsx.txt massdns.txt | \
         grep -E "^[a-zA-Z0-9.-]+$" | sed 's/^\\*\\.//' | sort -u > subdomain.txt
 
-    # 5. Lọc http/https
+    # Lọc http/https
     echo "[*] httprobe..."
     cat subdomain.txt | httprobe > httprobe.txt
 
@@ -66,7 +66,7 @@ for domain in $domains; do
     sort -u -o http_subdomain.txt http_subdomain.txt
     sort -u -o https_subdomain.txt https_subdomain.txt
 
-    # 5.5. FFUF scan for status codes
+    # FFUF scan for status codes
     # Nếu đã tồn tại thư mục ffuf thì xóa trước khi tạo mới
     TARGET_FFUF_DIR="$TARGET_RECON_DIR/ffuf"
     if [ -d "$TARGET_FFUF_DIR" ]; then
@@ -84,7 +84,7 @@ for domain in $domains; do
     # Xóa tất cả các file trừ subdomain.txt, http_subdomain.txt, https_subdomain.txt, httprobe.txt
     find . -maxdepth 1 -type f ! -name 'subdomain.txt' ! -name 'http_subdomain.txt' ! -name 'https_subdomain.txt' ! -name 'httprobe.txt' -delete
 
-    # 6. Crawling & URL Gathering
+    # Crawling & URL Gathering
     echo "[*] dirsearch..."
     python3 "$TOOLS_DIR/dirsearch/dirsearch.py" -u "$(head -n 1 httprobe.txt)" -e * -o dirsearch.txt --format plain
 
@@ -97,10 +97,14 @@ for domain in $domains; do
     echo "[*] gau..."
     cat httprobe.txt | gau > gau.txt
 
-    # 7. Tổng hợp URL, lọc trùng, gom nhóm
+    # Tổng hợp URL, lọc trùng, gom nhóm
     cat hakrawler.txt katana.txt gau.txt dirsearch.txt 2>/dev/null | \
         grep -Eo 'https?://[^ ]+' | sort -u > all_url.txt
 
+    # Sensitive Data Discovery
+    cat all_url.txt | grep -Ei '\.(php|asp|aspx|jsp|html?|txt|json|xml|log|conf|cfg|ini|sql|bak|old|zip|tar|gz|7z|rar|db|sqlite|csv|xls|xlsx|doc|docx|pdf|env|yaml|yml)$' | sort -u > sensitive_url.txt
+
+    # Grouping URLs
     echo "[*] Gom nhóm các URL gần giống nhau..."
     awk -F/ '{
         domain=$3;

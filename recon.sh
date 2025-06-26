@@ -26,6 +26,7 @@ for domain in $domains; do
     TARGET_RECON_DIR="$DESKTOP_DIR/$NAME_PROJECT/$domain/recon"
     rm -rf "$TARGET_RECON_DIR"
     mkdir -p "$TARGET_RECON_DIR"
+    # Chỉ định folder recon lưu kết quả
     cd "$TARGET_RECON_DIR"
 
     # Subdomain Enumeration
@@ -69,9 +70,6 @@ for domain in $domains; do
     # FFUF scan for status codes
     # Nếu đã tồn tại thư mục ffuf thì xóa trước khi tạo mới
     TARGET_FFUF_DIR="$TARGET_RECON_DIR/ffuf"
-    if [ -d "$TARGET_FFUF_DIR" ]; then
-        rm -rf "$TARGET_FFUF_DIR"
-    fi
     mkdir -p "$TARGET_FFUF_DIR"
 
     # Quét qua các link trong httprobe.txt, link nào trả về status code nào thì lưu vào file tương ứng
@@ -98,11 +96,19 @@ for domain in $domains; do
     cat httprobe.txt | gau > gau.txt
 
     # Tổng hợp URL, lọc trùng, gom nhóm
+    echo "[*] Sắp xếp, lọc trùng, tổng hợp url..."
     cat hakrawler.txt katana.txt gau.txt dirsearch.txt 2>/dev/null | \
         grep -Eo 'https?://[^ ]+' | sort -u > all_url.txt
 
     # Sensitive Data Discovery
+    echo "[*] Lọc dữ liệu nhạy cảm..."
     cat all_url.txt | grep -Ei '\.(php|asp|aspx|jsp|html?|txt|json|xml|log|conf|cfg|ini|sql|bak|old|zip|tar|gz|7z|rar|db|sqlite|csv|xls|xlsx|doc|docx|pdf|env|yaml|yml)$' | sort -u > sensitive_url.txt
+
+    # JS Secrets Discovery
+    echo "[*] Tìm kiếm bí mật trong các file JS..."
+    cat all_url.txt | grep '\.js$' | while read -r js; do
+        secretfinder -i $js -o cli >> js_secret.txt
+    done
 
     # Grouping URLs
     echo "[*] Gom nhóm các URL gần giống nhau..."

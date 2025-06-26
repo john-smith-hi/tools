@@ -21,13 +21,7 @@
 #   - Seclists
 # ===========================
 
-TOOLS_DIR=~/tools 
-ZSHRC=~/.zshrc
-PAYLOADS_DIR=~/payloads
-
-echo "* Tạo thư mục $TOOLS_DIR và chuẩn bị môi trường..."
-mkdir -p "$TOOLS_DIR"
-cd "$TOOLS_DIR"
+source "$TOOLS_DIR/include.sh"
 
 # --- GO ENVIRONMENT ---
 echo "* Kiểm tra và cài đặt Go nếu cần..."
@@ -154,8 +148,6 @@ mkdir -p "$TOOLS_DIR/trufflehog"
 echo "* Cài Gitleaks..."
 if ! command -v gitleaks &> /dev/null; then
     # Thư mục chứa mã nguồn và binary
-    GITLEAKS_SRC="$TOOLS_DIR/gitleaks-src"
-    GITLEAKS_BIN="$TOOLS_DIR/gitleaks"
 
     # Xóa mã nguồn cũ nếu có
     [ -d "$GITLEAKS_SRC" ] && rm -rf "$GITLEAKS_SRC"

@@ -21,9 +21,11 @@
 #   - Seclists
 # ===========================
 
-TOOLS_DIR=~/tools
-ZSHRC=~/.zshrc
-PAYLOADS_DIR=~/payloads
+source "$TOOLS_DIR/include.sh"
+# 
+if ! grep -q "alias auto_update=" "$ZSHRC"; then
+    echo "alias auto_update='zsh $TOOLS_DIR/update.sh'" >> "$ZSHRC"
+fi
 
 echo "* Update các tool Go..."
 declare -A go_tools=(
@@ -31,7 +33,6 @@ declare -A go_tools=(
     [assetfinder]="github.com/tomnomnom/assetfinder@latest"
     [dnsx]="github.com/projectdiscovery/dnsx/cmd/dnsx@latest"
     [puredns]="github.com/d3mondev/puredns/v2@latest"
-    [httpx]="github.com/projectdiscovery/httpx/cmd/httpx@latest"
     [httprobe]="github.com/tomnomnom/httprobe@latest"
     [gau]="github.com/lc/gau/v2/cmd/gau@latest"
     [hakrawler]="github.com/hakluke/hakrawler@latest"
@@ -45,6 +46,7 @@ declare -A go_tools=(
 for tool in ${(k)go_tools}; do
     echo "* Update $tool (Go)..."
     go install "${go_tools[$tool]}"
+    mkdir -p "$TOOLS_DIR/$tool"
 done
 
 echo "* Update nuclei templates..."
@@ -52,14 +54,16 @@ nuclei -update-templates
 
 echo "* Update các tool cài qua apt..."
 sudo apt update
-apt_tools=(ffuf wfuzz whatweb ruby-full python3-pip nikto git curl unzip pipx jq)
+apt_tools=(ffuf wfuzz whatweb ruby-full python3-pip nikto git curl unzip pipx jq findomain)
 for tool in $apt_tools; do
     echo "* Update $tool (apt)..."
     sudo apt install --only-upgrade -y $tool
+    mkdir -p "$TOOLS_DIR/$tool"
 done
 
 echo "* Update wpscan (gem)..."
 sudo gem update wpscan
+mkdir -p "$TOOLS_DIR/wpscan"
 
 clone_and_pull() {
     local dir=$1
@@ -81,7 +85,6 @@ clone_and_pull "dirsearch" ""
 clone_and_pull "SecretFinder" "requirements.txt"
 clone_and_pull "Corsy" "requirements.txt"
 clone_and_pull "CRLF-Injection-Scanner" ""
-clone_and_pull "dnsdumpster" ""
 clone_and_pull "XSStrike" "requirements.txt"
 clone_and_pull "sqlmap" ""
 
@@ -90,11 +93,10 @@ pipx_tools=(trufflehog arjun)
 for tool in $pipx_tools; do
     echo "* Update $tool (pipx)..."
     pipx upgrade $tool
+    mkdir -p "$TOOLS_DIR/$tool"
 done
 
 echo "* Update gitleaks..."
-GITLEAKS_SRC="$TOOLS_DIR/gitleaks-src"
-GITLEAKS_BIN="$TOOLS_DIR/gitleaks"
 if [ -d "$GITLEAKS_SRC/.git" ]; then
     cd "$GITLEAKS_SRC"
     git pull
@@ -119,7 +121,7 @@ unzip -q -o findomain-linux.zip
 chmod +x findomain
 mv findomain "$TOOLS_DIR/"
 rm findomain-linux.zip
-grep -qxF "alias findomain='~/tools/findomain'" "$ZSHRC" || echo "alias findomain='~/tools/findomain'" >> "$ZSHRC"
+grep -qxF "alias findomain='$TOOLS_DIR/findomain'" "$ZSHRC" || echo "alias findomain='$TOOLS_DIR/findomain'" >> "$ZSHRC"
 
 echo "* Update các tool bypass 403..."
 bypass_tools=(bypass-403 nomore403 4-ZERO-3)
@@ -128,6 +130,7 @@ for dir in $bypass_tools; do
         echo "* Update $dir (git)..."
         git -C "$TOOLS_DIR/$dir" pull
     fi
+
 done
 
 echo "* Build lại massdns nếu có thay đổi..."

@@ -8,7 +8,7 @@
 # 2. DNS Tools:
 #    - dnsx, massdns, dnsdumpster
 # 3. HTTP/Web Tools:
-#    - httpx, httprobe, hakrawler, katana, waybackurls, gau, ffuf, wfuzz, whatweb, nikto, dirsearch, Corsy, CRLF-Injection-Scanner, smuggles
+#    - httprobe, hakrawler, katana, waybackurls, gau, ffuf, wfuzz, whatweb, nikto, dirsearch, Corsy, CRLF-Injection-Scanner, smuggles
 # 4. Vulnerability Scanners:
 #    - nuclei, wpscan, CMSeeK
 # 5. Source Code Security:

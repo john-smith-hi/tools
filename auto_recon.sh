@@ -24,6 +24,7 @@ echo "* RECON ----------------"
 
 for domain in $domains; do
     TARGET_RECON_DIR="$DESKTOP_DIR/$domain/recon"
+    rm -rf "$TARGET_RECON_DIR"
     mkdir -p "$TARGET_RECON_DIR"
     cd "$TARGET_RECON_DIR"
 
@@ -47,79 +48,98 @@ for domain in $domains; do
     echo "[*] dnsx..."
     dnsx -l subfinder.txt -o dnsx.txt
 
-    echo "[*] massdns..."
-    massdns -r "$TOOLS_DIR/resolvers.txt" -t A -o S -w massdns.txt subfinder.txt
-
-    echo "[*] dnsdumpster..."
-    python3 "$TOOLS_DIR/dnsdumpster/dnsdumpster.py" "$domain" > dnsdumpster.txt
-
     # 3. crt.sh
     echo "[*] crt.sh..."
     curl -s "https://crt.sh/?q=%25.$domain&output=json" | jq -r '.[].name_value' | sed 's/\\n/\n/g' | sort -u > crtsh.txt
 
     # 4. Tổng hợp subdomain, lọc trùng
-    cat subfinder.txt assetfinder.txt findomain.txt shuffledns.txt puredns.txt crtsh.txt dnsx.txt massdns.txt dnsdumpster.txt 2>/dev/null | \
+    cat subfinder.txt assetfinder.txt findomain.txt shuffledns.txt puredns.txt crtsh.txt dnsx.txt massdns.txt 2>/dev/null | \
         grep -E "^[a-zA-Z0-9.-]+$" | sed 's/^\\*\\.//' | sort -u > subdomain.txt
 
     # 5. Lọc http/https
-    echo "[*] httpx..."
-    httpx -l subdomain.txt -o httpx_all.txt -silent
-
-    grep '^http://' httpx_all.txt | cut -d' ' -f1 | sort -u > http_subdomain.txt
-    grep '^https://' httpx_all.txt | cut -d' ' -f1 | sort -u > https_subdomain.txt
-
     echo "[*] httprobe..."
     cat subdomain.txt | httprobe > httprobe_all.txt
 
-    grep '^http://' httprobe_all.txt | cut -d' ' -f1 | sort -u >> http_subdomain.txt
-    grep '^https://' httprobe_all.txt | cut -d' ' -f1 | sort -u >> https_subdomain.txt
+    grep '^http://' httprobe_all.txt | cut -d' ' -f1 | sort -u > http_subdomain.txt
+    grep '^https://' httprobe_all.txt | cut -d' ' -f1 | sort -u > https_subdomain.txt
 
     sort -u -o http_subdomain.txt http_subdomain.txt
     sort -u -o https_subdomain.txt https_subdomain.txt
 
-    # 6. Crawling & URL Gathering
-    echo "[*] hakrawler..."
-    cat http_subdomain.txt https_subdomain.txt | hakrawler > hakrawler.txt
+    # # 6. Crawling & URL Gathering
+    # echo "[*] hakrawler..."
+    # cat http_subdomain.txt https_subdomain.txt | hakrawler > hakrawler.txt
 
-    echo "[*] katana..."
-    katana -list http_subdomain.txt -o katana.txt
+    # echo "[*] katana..."
+    # katana -list http_subdomain.txt -o katana.txt
 
-    echo "[*] waybackurls..."
-    cat http_subdomain.txt https_subdomain.txt | waybackurls > waybackurls.txt
+    # echo "[*] waybackurls..."
+    # cat http_subdomain.txt https_subdomain.txt | waybackurls > waybackurls.txt
 
-    echo "[*] gau..."
-    cat http_subdomain.txt https_subdomain.txt | gau > gau.txt
+    # echo "[*] gau..."
+    # cat http_subdomain.txt https_subdomain.txt | gau > gau.txt
 
-    echo "[*] dirsearch..."
-    python3 "$TOOLS_DIR/dirsearch/dirsearch.py" -u "$(head -n 1 http_subdomain.txt)" -e * -o dirsearch.txt --format plain
+    # echo "[*] dirsearch..."
+    # python3 "$TOOLS_DIR/dirsearch/dirsearch.py" -u "$(head -n 1 http_subdomain.txt)" -e * -o dirsearch.txt --format plain
 
-    # 7. Tổng hợp URL, lọc trùng, gom nhóm
-    cat hakrawler.txt katana.txt waybackurls.txt gau.txt ffuf.txt wfuzz.txt dirsearch.txt 2>/dev/null | \
-        grep -Eo 'https?://[^ ]+' | sort -u > all_url_raw.txt
+    # # 7. Tổng hợp URL, lọc trùng, gom nhóm
+    # cat hakrawler.txt katana.txt waybackurls.txt gau.txt ffuf.txt wfuzz.txt dirsearch.txt 2>/dev/null | \
+    #     grep -Eo 'https?://[^ ]+' | sort -u > all_url_raw.txt
 
-    # Lọc lại qua httpx
-    echo "[*] Lọc lại URL qua httpx..."
-    httpx -l all_url_raw.txt -o all_url_httpx.txt -silent
+    # # Lọc lại qua httprobe
+    # # echo "[*] Lọc lại URL qua httprobe..."
+    # # cat all_url_raw.txt | httprobe > all_url_httprobe.txt
 
-    # Lọc lại qua httprobe
-    echo "[*] Lọc lại URL qua httprobe..."
-    cat all_url_raw.txt | httprobe > all_url_httprobe.txt
+    # # Tổng hợp kết quả đã lọc
+    # cat all_url_httprobe.txt | sort -u > all_url.txt
 
-    # Tổng hợp kết quả đã lọc
-    cat all_url_httpx.txt all_url_httprobe.txt | sort -u > all_url.txt
+    # echo "[*] Gom nhóm các URL gần giống nhau..."
+    # awk -F/ '{
+    #     domain=$3;
+    #     path="/"$4"/"$5"/"$6;
+    #     group[domain path] = group[domain path] ? group[domain path] ORS $0 : $0
+    # }
+    # END {
+    #     for (g in group) {
+    #         print "# Group: " g;
+    #         print group[g] "\n";
+    #     }
+    # }' all_url.txt > all_url_grouped.txt
 
-    echo "[*] Gom nhóm các URL gần giống nhau..."
-    awk -F/ '{
-        domain=$3;
-        path="/"$4"/"$5"/"$6;
-        group[domain path] = group[domain path] ? group[domain path] ORS $0 : $0
-    }
-    END {
-        for (g in group) {
-            print "# Group: " g;
-            print group[g] "\n";
-        }
-    }' all_url.txt > all_url_grouped.txt
+    # # 8. FFUF Custom Recon
+    # echo "[*] FFUF Custom Recon..."
+    # TARGET_FFUF_DIR="$DESKTOP_DIR/$domain/recon/ffuf"
+    # mkdir -p "$TARGET_FFUF_DIR"
+    # wordlist_folders=(
+    #     "$PAYLOADS_DIR/SecLists/Discovery/Web-Content/directory-list-2.3-medium.txt"
+    #     "$PAYLOADS_DIR/SecLists/Discovery/Web-Content/directory-list-lowercase-2.3-medium.txt"
+    # )
+    # wordlist_files=(
+    #     "$PAYLOADS_DIR/SecLists/Discovery/Web-Content/common.txt"
+    #     "$PAYLOADS_DIR/SecLists/Discovery/Web-Content/raft-small-files.txt"
+    #     "$PAYLOADS_DIR/SecLists/Discovery/Web-Content/raft-large-files.txt"
+    # )
+    # for proto in http https; do
+    #     if [[ -s "${proto}_subdomain.txt" ]]; then
+    #         while read url; do
+    #             # Quét folder
+    #             for wordlist in "${wordlist_folders[@]}"; do
+    #                 wl_name=$(basename "$wordlist" .txt)
+    #                 ffuf -w "$wordlist" -u "$url/FUZZ" -mc all -of csv -o "ffuf/${proto}_${wl_name}_folder.csv" -t 40
+    #             done
+    #             # Quét file
+    #             for wordlist in "${wordlist_files[@]}"; do
+    #                 wl_name=$(basename "$wordlist" .txt)
+    #                 ffuf -w "$wordlist" -u "$url/FUZZ" -mc all -of csv -o "ffuf/${proto}_${wl_name}_file.csv" -t 40
+    #             done
+    #         done < "${proto}_subdomain.txt"
+    #     fi
+    # done
+
+    # for code in 200 403 500; do
+    #     mkdir -p "ffuf/$code"
+    #     grep -h ",$code," ffuf/*.csv | awk -F',' '{print $1}' | sort -u > "ffuf/$code.txt"
+    # done
 
     echo "[*] Recon done for $domain. Kết quả lưu tại $TARGET_RECON_DIR"
 done

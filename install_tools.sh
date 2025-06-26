@@ -6,9 +6,9 @@
 # 1. Subdomain Enumeration:
 #    - subfinder, assetfinder, findomain, shuffledns, puredns
 # 2. DNS Tools:
-#    - dnsx, massdns, dnsdumpster
+#    - dnsx, massdns
 # 3. HTTP/Web Tools:
-#    - httpx, httprobe, hakrawler, katana, waybackurls, gau, ffuf, wfuzz, whatweb, nikto, dirsearch, Corsy, CRLF-Injection-Scanner, smuggles
+#    - httprobe, hakrawler, katana, waybackurls, gau, ffuf, wfuzz, whatweb, nikto, dirsearch, Corsy, CRLF-Injection-Scanner, smuggles
 # 4. Vulnerability Scanners:
 #    - nuclei, wpscan, CMSeeK
 # 5. Source Code Security:
@@ -46,7 +46,6 @@ declare -A go_tools=(
     [assetfinder]="github.com/tomnomnom/assetfinder@latest"
     [dnsx]="github.com/projectdiscovery/dnsx/cmd/dnsx@latest"
     [puredns]="github.com/d3mondev/puredns/v2@latest"
-    [httpx]="github.com/projectdiscovery/httpx/cmd/httpx@latest"
     [httprobe]="github.com/tomnomnom/httprobe@latest"
     [gau]="github.com/lc/gau/v2/cmd/gau@latest"
     [hakrawler]="github.com/hakluke/hakrawler@latest"
@@ -69,7 +68,7 @@ done
 # --- APT TOOLS ---
 echo "* Cài thêm các công cụ hỗ trợ khác..."
 sudo apt update
-apt_tools=(ffuf wfuzz whatweb ruby-full python3-pip nikto git curl unzip pipx jq)
+apt_tools=(ffuf wfuzz whatweb ruby-full python3-pip nikto git curl unzip pipx jq findomain)
 for tool in $apt_tools; do
     if ! command -v $tool &> /dev/null && ! dpkg -s $tool &> /dev/null; then
         sudo apt install -y $tool
@@ -132,12 +131,6 @@ if clone_and_alias "https://github.com/MichaelStott/CRLF-Injection-Scanner.git" 
     python3 "$TOOLS_DIR/CRLF-Injection-Scanner/setup.py" install
 fi
 
-# dnsdumpster
-echo "* Cài dnsdumpster tool..."
-if clone_and_alias "https://github.com/PaulSec/API-dnsdumpster.com.git" "dnsdumpster" "dnsdumpster" "alias dnsdumpster='python3 ~/tools/dnsdumpster/dnsdumpster.py'"; then
-    python3 "$TOOLS_DIR/dnsdumpster/setup.py" install
-fi
-
 # XSStrike
 echo "* Cài XSStrike..."
 if clone_and_alias "https://github.com/s0md3v/XSStrike.git" "XSStrike" "xsstrike" "alias xsstrike='python3 ~/tools/XSStrike/xsstrike.py'"; then
@@ -189,24 +182,11 @@ else
     echo "gitleaks đã được cài đặt"
 fi
 
-# --- BYPASS 403 TOOLS ---
+# # --- BYPASS 403 TOOLS ---
 echo "[*] Cài các tool bypass 403..."
-clone_and_alias \"https://github.com/iamj0ker/bypass-403.git\" \"bypass-403\" \"bypass403\" \"alias bypass403='bash ~/tools/bypass-403/bypass-403.sh'\"
-clone_and_alias \"https://github.com/devploit/nomore403.git\" \"nomore403\" \"nomore403\" \"alias nomore403='bash ~/tools/nomore403/nomore403.sh'\"
-clone_and_alias \"https://github.com/Dheerajmadhukar/4-ZERO-3.git\" \"4-ZERO-3\" \"zero403\" \"alias zero403='bash ~/tools/4-ZERO-3/403.sh'\"
-
-# --- FINDOMAIN (BINARY) ---
-echo "[*] Cài findomain..."
-if ! command -v findomain &> /dev/null; then
-    wget -q https://github.com/findomain/findomain/releases/latest/download/findomain-linux.zip -O findomain-linux.zip
-    unzip -q findomain-linux.zip
-    chmod +x findomain
-    mv findomain \"$TOOLS_DIR/\"
-    rm findomain-linux.zip
-    grep -qxF \"alias findomain='~/tools/findomain'\" \"$ZSHRC\" || echo \"alias findomain='~/tools/findomain'\" >> \"$ZSHRC\"
-else
-    echo \"findomain đã được cài đặt\"
-fi
+clone_and_alias "https://github.com/iamj0ker/bypass-403.git" "bypass-403" "bypass403" "alias bypass403='bash ~/tools/bypass-403/bypass-403.sh'"
+clone_and_alias "https://github.com/devploit/nomore403.git" "nomore403" "nomore403" "alias nomore403='bash ~/tools/nomore403/nomore403.sh'"
+clone_and_alias "https://github.com/Dheerajmadhukar/4-ZERO-3.git" "4-ZERO-3" "zero403" "alias zero403='bash ~/tools/4-ZERO-3/403.sh'"
 
 # --- MASSDNS ---
 echo "[*] Cài massdns..."
@@ -241,4 +221,4 @@ else
     echo "Alias tools đã tồn tại trong $ZSHRC"
 fi
 
-source \"$ZSHRC\"
+source "$ZSHRC"

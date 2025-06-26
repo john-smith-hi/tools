@@ -6,7 +6,7 @@
 # 1. Subdomain Enumeration:
 #    - subfinder, assetfinder, findomain, shuffledns, puredns
 # 2. DNS Tools:
-#    - dnsx, massdns, dnsdumpster
+#    - dnsx, massdns
 # 3. HTTP/Web Tools:
 #    - httprobe, hakrawler, katana, waybackurls, gau, ffuf, wfuzz, whatweb, nikto, dirsearch, Corsy, CRLF-Injection-Scanner, smuggles
 # 4. Vulnerability Scanners:
@@ -22,12 +22,12 @@
 # ===========================
 
 source "$TOOLS_DIR/include.sh"
-# 
+
 if ! grep -q "alias auto_update=" "$ZSHRC"; then
     echo "alias auto_update='zsh $TOOLS_DIR/update.sh'" >> "$ZSHRC"
 fi
 
-echo "* Update các tool Go..."
+echo "* Updating Go-based tools..."
 declare -A go_tools=(
     [subfinder]="github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest"
     [assetfinder]="github.com/tomnomnom/assetfinder@latest"
@@ -44,24 +44,24 @@ declare -A go_tools=(
     [dalfox]="github.com/hahwul/dalfox/v2@latest"
 )
 for tool in ${(k)go_tools}; do
-    echo "* Update $tool (Go)..."
+    echo "* Updating $tool (Go)..."
     go install "${go_tools[$tool]}"
     mkdir -p "$TOOLS_DIR/$tool"
 done
 
-echo "* Update nuclei templates..."
+echo "* Updating nuclei templates..."
 nuclei -update-templates
 
-echo "* Update các tool cài qua apt..."
+echo "* Updating APT tools..."
 sudo apt update
 apt_tools=(ffuf wfuzz whatweb ruby-full python3-pip nikto git curl unzip pipx jq findomain)
 for tool in $apt_tools; do
-    echo "* Update $tool (apt)..."
+    echo "* Updating $tool (apt)..."
     sudo apt install --only-upgrade -y $tool
     mkdir -p "$TOOLS_DIR/$tool"
 done
 
-echo "* Update wpscan (gem)..."
+echo "* Updating wpscan (gem)..."
 sudo gem update wpscan
 mkdir -p "$TOOLS_DIR/wpscan"
 
@@ -69,7 +69,7 @@ clone_and_pull() {
     local dir=$1
     local req=$2
     if [ -d "$TOOLS_DIR/$dir/.git" ]; then
-        echo "* Update $dir (git)..."
+        echo "* Updating $dir (git)..."
         git -C "$TOOLS_DIR/$dir" pull
         if [ -n "$req" ] && [ -f "$TOOLS_DIR/$dir/$req" ]; then
             pip3 install --break-system-packages --upgrade -r "$TOOLS_DIR/$dir/$req"
@@ -79,7 +79,7 @@ clone_and_pull() {
     fi
 }
 
-echo "* Update các tool Python (git clone)..."
+echo "* Updating Python tools (git clone)..."
 clone_and_pull "CMSeeK" "requirements.txt"
 clone_and_pull "dirsearch" ""
 clone_and_pull "SecretFinder" "requirements.txt"
@@ -88,15 +88,15 @@ clone_and_pull "CRLF-Injection-Scanner" ""
 clone_and_pull "XSStrike" "requirements.txt"
 clone_and_pull "sqlmap" ""
 
-echo "* Update các tool pipx..."
+echo "* Updating pipx tools..."
 pipx_tools=(trufflehog arjun)
 for tool in $pipx_tools; do
-    echo "* Update $tool (pipx)..."
+    echo "* Updating $tool (pipx)..."
     pipx upgrade $tool
     mkdir -p "$TOOLS_DIR/$tool"
 done
 
-echo "* Update gitleaks..."
+echo "* Updating gitleaks..."
 if [ -d "$GITLEAKS_SRC/.git" ]; then
     cd "$GITLEAKS_SRC"
     git pull
@@ -115,7 +115,7 @@ else
     cd "$TOOLS_DIR"
 fi
 
-echo "* Update findomain..."
+echo "* Updating findomain..."
 wget -q https://github.com/findomain/findomain/releases/latest/download/findomain-linux.zip -O findomain-linux.zip
 unzip -q -o findomain-linux.zip
 chmod +x findomain
@@ -123,27 +123,26 @@ mv findomain "$TOOLS_DIR/"
 rm findomain-linux.zip
 grep -qxF "alias findomain='$TOOLS_DIR/findomain'" "$ZSHRC" || echo "alias findomain='$TOOLS_DIR/findomain'" >> "$ZSHRC"
 
-echo "* Update các tool bypass 403..."
+echo "* Updating bypass 403 tools..."
 bypass_tools=(bypass-403 nomore403 4-ZERO-3)
 for dir in $bypass_tools; do
     if [ -d "$TOOLS_DIR/$dir/.git" ]; then
-        echo "* Update $dir (git)..."
+        echo "* Updating $dir (git)..."
         git -C "$TOOLS_DIR/$dir" pull
     fi
-
 done
 
-echo "* Build lại massdns nếu có thay đổi..."
+echo "* Rebuilding massdns if there are changes..."
 if [ -d "$TOOLS_DIR/massdns/.git" ]; then
     cd "$TOOLS_DIR/massdns" && make && sudo make install
     cd "$TOOLS_DIR"
 fi
 
-echo "* Update SecLists payloads..."
+echo "* Updating SecLists payloads..."
 if [ -d "$PAYLOADS_DIR/SecLists/.git" ]; then
     cd "$PAYLOADS_DIR/SecLists" && git pull
 else
     git clone https://github.com/danielmiessler/SecLists.git "$PAYLOADS_DIR/SecLists"
 fi
 
-echo "* Đã update xong toàn bộ tool!"
+echo "* All tools have been updated!"

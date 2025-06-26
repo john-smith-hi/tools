@@ -24,7 +24,7 @@
 source "$TOOLS_DIR/include.sh"
 
 # --- GO ENVIRONMENT ---
-echo "* Kiểm tra và cài đặt Go nếu cần..."
+echo "* Checking and installing Go if needed..."
 if ! command -v go &> /dev/null; then
     wget -q https://go.dev/dl/go1.22.3.linux-amd64.tar.gz
     sudo tar -C /usr/local -xzf go1.22.3.linux-amd64.tar.gz
@@ -34,7 +34,7 @@ if ! command -v go &> /dev/null; then
 fi
 
 # --- GO TOOLS ---
-echo "* Cài các tool viết bằng Go..."
+echo "* Installing Go-based tools..."
 declare -A go_tools=(
     [subfinder]="github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest"
     [assetfinder]="github.com/tomnomnom/assetfinder@latest"
@@ -54,30 +54,30 @@ for tool in ${(k)go_tools}; do
     if ! command -v $tool &> /dev/null; then
         go install "${go_tools[$tool]}"
     else
-        echo "$tool đã được cài đặt"
+        echo "$tool is already installed"
     fi
     mkdir -p "$TOOLS_DIR/$tool"
 done
 
 # --- APT TOOLS ---
-echo "* Cài thêm các công cụ hỗ trợ khác..."
+echo "* Installing additional support tools..."
 sudo apt update
 apt_tools=(ffuf wfuzz whatweb ruby-full python3-pip nikto git curl unzip pipx jq findomain)
 for tool in $apt_tools; do
     if ! command -v $tool &> /dev/null && ! dpkg -s $tool &> /dev/null; then
         sudo apt install -y $tool
     else
-        echo "$tool đã được cài đặt"
+        echo "$tool is already installed"
     fi
     mkdir -p "$TOOLS_DIR/$tool"
 done
 
 # --- RUBY GEM TOOLS ---
-echo "* Cài wpscan..."
+echo "* Installing wpscan..."
 if ! command -v wpscan &> /dev/null; then
     sudo gem install wpscan
 else
-    echo "wpscan đã được cài đặt"
+    echo "wpscan is already installed"
 fi
 mkdir -p "$TOOLS_DIR/wpscan"
 
@@ -90,127 +90,124 @@ clone_and_alias() {
     if [ ! -d "$TOOLS_DIR/$dir" ]; then
         git clone "$repo" "$TOOLS_DIR/$dir"
         [ -n "$cmd" ] && grep -qxF "$cmd" "$ZSHRC" || echo "$cmd" >> "$ZSHRC"
-        return 0    # mới clone, cần cài req
+        return 0    # freshly cloned, need to install requirements
     else
-        echo "$dir đã được cài đặt"
-        return 1    # đã clone, không cần cài req
+        echo "$dir is already installed"
+        return 1    # already cloned, no need to install requirements
     fi
 }
 
 # CMSeeK
-echo "* Cài CMSeeK..."
+echo "* Installing CMSeeK..."
 if clone_and_alias "https://github.com/Tuhinshubhra/CMSeeK.git" "CMSeeK" "cmseek" "alias cmseek='python3 ~/tools/CMSeeK/cmseek.py'"; then
     pip3 install --break-system-packages -r "$TOOLS_DIR/CMSeeK/requirements.txt"
 fi
 
-# dirsearch (không cần pip)
-echo "* Cài dirsearch..."
+# dirsearch (no pip needed)
+echo "* Installing dirsearch..."
 clone_and_alias "https://github.com/maurosoria/dirsearch.git" "dirsearch" "dirsearch" "alias dirsearch='python3 ~/tools/dirsearch/dirsearch.py'"
 
 # SecretFinder
-echo "* Cài SecretFinder..."
+echo "* Installing SecretFinder..."
 if clone_and_alias "https://github.com/m4ll0k/SecretFinder.git" "SecretFinder" "secretfinder" "alias secretfinder='python3 ~/tools/SecretFinder/SecretFinder.py'"; then
     pip3 install --break-system-packages -r "$TOOLS_DIR/SecretFinder/requirements.txt"
 fi
 
 # Corsy
-echo "* Cài Corsy..."
+echo "* Installing Corsy..."
 if clone_and_alias "https://github.com/s0md3v/Corsy.git" "Corsy" "corsy" "alias corsy='python3 ~/tools/Corsy/corsy.py'"; then
     pip3 install --break-system-packages -r "$TOOLS_DIR/Corsy/requirements.txt"
 fi
 
 # CRLF-Injection-Scanner
-echo "* Cài CRLF-Injection-Scanner..."
+echo "* Installing CRLF-Injection-Scanner..."
 if clone_and_alias "https://github.com/MichaelStott/CRLF-Injection-Scanner.git" "CRLF-Injection-Scanner" "crlfscanner" "alias crlfscanner='python3 ~/tools/CRLF-Injection-Scanner/crlf.py'"; then
     python3 "$TOOLS_DIR/CRLF-Injection-Scanner/setup.py" install
 fi
 
 # XSStrike
-echo "* Cài XSStrike..."
+echo "* Installing XSStrike..."
 if clone_and_alias "https://github.com/s0md3v/XSStrike.git" "XSStrike" "xsstrike" "alias xsstrike='python3 ~/tools/XSStrike/xsstrike.py'"; then
     pip3 install --break-system-packages -r "$TOOLS_DIR/XSStrike/requirements.txt"
 fi
 
-# sqlmap (không cần pip)
-echo "* Cài sqlmap..."
+# sqlmap (no pip needed)
+echo "* Installing sqlmap..."
 clone_and_alias "https://github.com/sqlmapproject/sqlmap.git" "sqlmap" "sqlmap" "alias sqlmap='python3 ~/tools/sqlmap/sqlmap.py'"
 
 # --- TRUFFLEHOG (pipx) ---
-echo "* Cài truffleHog..."
+echo "* Installing truffleHog..."
 if ! command -v trufflehog &> /dev/null; then
     pipx install trufflehog
 else
-    echo "trufflehog đã được cài đặt"
+    echo "trufflehog is already installed"
 fi
 mkdir -p "$TOOLS_DIR/trufflehog"
 
 # --- GITLEAKS (BINARY) ---
-echo "* Cài Gitleaks..."
+echo "* Installing Gitleaks..."
 if ! command -v gitleaks &> /dev/null; then
-    # Thư mục chứa mã nguồn và binary
+    # Source and binary directories
 
-    # Xóa mã nguồn cũ nếu có
+    # Remove old source if exists
     [ -d "$GITLEAKS_SRC" ] && rm -rf "$GITLEAKS_SRC"
     [ -f "$GITLEAKS_BIN" ] && rm -f "$GITLEAKS_BIN"
     [ -d "$GITLEAKS_BIN" ] && rm -rf "$GITLEAKS_BIN"
 
-    # Clone mã nguồn Gitleaks
+    # Clone Gitleaks source
     git clone https://github.com/gitleaks/gitleaks.git "$GITLEAKS_SRC"
 
     # Build Gitleaks
     cd "$GITLEAKS_SRC"
     make build
 
-    # Copy binary ra thư mục tools và phân quyền
+    # Copy binary to tools directory and set permission
     cp ./gitleaks "$GITLEAKS_BIN"
     chmod +x "$GITLEAKS_BIN"
 
-    # Tạo symlink vào /usr/local/bin
+    # Create symlink to /usr/local/bin
     sudo ln -sf "$GITLEAKS_BIN" /usr/local/bin/gitleaks
 
-    # Quay lại thư mục tools
+    # Return to tools directory
     cd "$TOOLS_DIR"
 else
-    echo "gitleaks đã được cài đặt"
+    echo "gitleaks is already installed"
 fi
 
-# # --- BYPASS 403 TOOLS ---
-echo "[*] Cài các tool bypass 403..."
+# --- BYPASS 403 TOOLS ---
+echo "[*] Installing bypass 403 tools..."
 clone_and_alias "https://github.com/iamj0ker/bypass-403.git" "bypass-403" "bypass403" "alias bypass403='bash ~/tools/bypass-403/bypass-403.sh'"
 clone_and_alias "https://github.com/devploit/nomore403.git" "nomore403" "nomore403" "alias nomore403='bash ~/tools/nomore403/nomore403.sh'"
 clone_and_alias "https://github.com/Dheerajmadhukar/4-ZERO-3.git" "4-ZERO-3" "zero403" "alias zero403='bash ~/tools/4-ZERO-3/403.sh'"
 
 # --- MASSDNS ---
-echo "[*] Cài massdns..."
-if [ ! -d \"$TOOLS_DIR/massdns\" ]; then
-    git clone https://github.com/blechschmidt/massdns.git \"$TOOLS_DIR/massdns\"
-    cd \"$TOOLS_DIR/massdns\" && make && sudo make install
+echo "[*] Installing massdns..."
+if [ ! -d "$TOOLS_DIR/massdns" ]; then
+    git clone https://github.com/blechschmidt/massdns.git "$TOOLS_DIR/massdns"
+    cd "$TOOLS_DIR/massdns" && make && sudo make install
 else
-    echo \"massdns đã được cài đặt\"
+    echo "massdns is already installed"
 fi
 
-echo "* Cài arjun (pipx)..."
+echo "* Installing arjun (pipx)..."
 if ! command -v arjun &> /dev/null; then
     pipx install arjun
 else
-    echo "arjun đã được cài đặt"
+    echo "arjun is already installed"
 fi
 mkdir -p "$TOOLS_DIR/arjun"
 
 # --- PAYLOADS ---
-echo "* Cài SecLists..."
+echo "* Installing SecLists..."
 if [ ! -d "$PAYLOADS_DIR/SecLists" ]; then
     git clone https://github.com/danielmiessler/SecLists.git "$PAYLOADS_DIR/SecLists"
 else
-    echo "SecLists đã được cài đặt"
+    echo "SecLists is already installed"
 fi
 
 # --- ALIAS TOOLS ---
-echo "* Thêm alias tools vào $ZSHRC..."
+echo "* Adding tools alias to $ZSHRC..."
 if ! grep -q "alias tools=" "$ZSHRC"; then
     echo "alias tools='ls $TOOLS_DIR'" >> "$ZSHRC"
 else
-    echo "Alias tools đã tồn tại trong $ZSHRC"
-fi
-
-source "$ZSHRC"
+    echo "Alias tools already exists in $ZSHRC"

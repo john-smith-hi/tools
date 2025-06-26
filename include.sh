@@ -9,13 +9,11 @@ GITLEAKS_SRC="$TOOLS_DIR/gitleaks-src"
 GITLEAKS_BIN="$TOOLS_DIR/gitleaks"
 
 # Tạo folder tools nếu chưa có
-if [ ! -d "$TOOLS_DIR" ]; then
-    mkdir -p "$TOOLS_DIR"
-fi
+mkdir -p "$TOOLS_DIR"
 
+# Mặc định copy tất cả vào thư mục ~/tools
 # Định nghĩa các file không copy
 EXCLUDE_FILES=("README.md")
-
 # Lặp qua các file trong thư mục hiện tại
 for file in *; do
     # Bỏ qua nếu là thư mục
@@ -35,3 +33,12 @@ for file in *; do
         cp "$file" "$TOOLS_DIR/"
     fi
 done
+
+#thêm file mới bổ sung alias vào đây
+if ! grep -q "alias auto_recon=" "$ZSHRC"; then
+    echo "alias auto_recon='zsh $TOOLS_DIR/recon.sh'" >> "$ZSHRC"
+fi
+
+if ! grep -q "alias auto_scan=" "$ZSHRC"; then
+    echo "alias auto_scan='zsh $TOOLS_DIR/scan.sh'" >> "$ZSHRC"
+fi

@@ -1,9 +1,6 @@
 #!/bin/zsh
 source "$TOOLS_DIR/include.sh"
 
-if ! grep -q "alias auto_scan=" "$ZSHRC"; then
-    echo "alias auto_scan='zsh $TOOLS_DIR/scan.sh'" >> "$ZSHRC"
-fi
 usage() {
     echo "Usage:"
     echo "  auto_scan -u example.com"
@@ -28,12 +25,15 @@ for domain in $domains; do
 
     corsy -i "$HTTP_SUBDOMAIN" -o "$TARGET_SCAN_DIR/corsy.txt"
     crlfscanner scan -i "$HTTP_SUBDOMAIN" -o "$TARGET_SCAN_DIR/crlfscanner.txt"
-    # --- NUCLEI SCAN ---
-    mkdir -p "$TARGET_SCAN_DIR/nuclei"
+    # --- NUCLEI & NIKTO SCAN ---
+    mkdir -p "$TARGET_SCAN_DIR/nuclei" "$TARGET_SCAN_DIR/nikto"
     while read url; do
         subdomain=$(echo "$url" | awk -F/ '{print $3}')
-        if [ -z "$subdomain" ]; then subdomain=$(echo "$url" | sed 's|https\?://||'); fi
+        [ -z "$subdomain" ] && subdomain=$(echo "$url" | sed 's|https\?://||')
+        # Nuclei scan
         nuclei -u "$url" -o "$TARGET_SCAN_DIR/nuclei/${subdomain}.txt"
+        # Nikto scan
+        nikto -h "$url" -output "$TARGET_SCAN_DIR/nikto/${subdomain}.txt" -Format txt
     done < "$HTTP_SUBDOMAIN"
 
     # --- REQUEST SMUGGLING ---
@@ -55,4 +55,6 @@ for domain in $domains; do
             -o "$TARGET_SCAN_DIR/directory_traversal/${subdomain}.csv" \
             -mc all,-404
     done < "$HTTP_SUBDOMAIN"
+
+    echo "[*] Scan done for $domain. Results saved at $TARGET_SCAN_DIR"
 done

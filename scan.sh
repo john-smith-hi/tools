@@ -6,8 +6,8 @@ if ! grep -q "alias auto_scan=" "$ZSHRC"; then
 fi
 usage() {
     echo "Usage:"
-    echo "  scan -u example.com"
-    echo "  scan -i url_list.txt"
+    echo "  auto_scan -u example.com"
+    echo "  auto_scan -i url_list.txt"
     exit 1
 }
 
@@ -20,25 +20,39 @@ else
 fi
 
 echo "* SCAN ----------------"
-NAME_PROJECT="${domains[1]%%.*}"
+NAME_PROJECT="${domains[0]%%.*}"
 for domain in $domains; do
     TARGET_RECON_DIR="$DESKTOP_DIR/$NAME_PROJECT/$domain/recon"
     TARGET_SCAN_DIR="$DESKTOP_DIR/$NAME_PROJECT/$domain/scan"
-    HTTPROBE="$TARGET_RECON_DIR/httprobe.txt"
+    HTTP_SUBDOMAIN="$TARGET_RECON_DIR/http_subdomain.txt"
 
-    corsy -i "$HTTPROBE" -o "$TARGET_SCAN_DIR/corsy.txt"
-    crlfscanner scan -i "$HTTPROBE" -o "$TARGET_SCAN_DIR/crlfscanner.txt"
-    # cat "$HTTPROBE" | smuggles >> "$TARGET_SCAN_DIR/smuggles.txt"
-    # --- PATH TRAVERSAL ---
-    # if [ ! -d "$TARGET_SCAN_DIR/ffuf" ]; then
-    #     mkdir -p "$TARGET_SCAN_DIR/ffuf"
-    # fi
-    # cat "$HTTPROBE" | while read url; do
-    #     ffuf -w "$PAYLOADS_DIR/SecLists/Fuzzing/LFI/LFI-Jhaddix.txt" \
-    #         -u "${url}?file=FUZZ" \
-    #         -of csv \
-    #         -o "$TARGET_SCAN_DIR/ffuf/temp.csv" \
-    #         -mc all,-404
-    # done
-    
+    corsy -i "$HTTP_SUBDOMAIN" -o "$TARGET_SCAN_DIR/corsy.txt"
+    crlfscanner scan -i "$HTTP_SUBDOMAIN" -o "$TARGET_SCAN_DIR/crlfscanner.txt"
+    # --- NUCLEI SCAN ---
+    mkdir -p "$TARGET_SCAN_DIR/nuclei"
+    while read url; do
+        subdomain=$(echo "$url" | awk -F/ '{print $3}')
+        if [ -z "$subdomain" ]; then subdomain=$(echo "$url" | sed 's|https\?://||'); fi
+        nuclei -u "$url" -o "$TARGET_SCAN_DIR/nuclei/${subdomain}.txt"
+    done < "$HTTP_SUBDOMAIN"
+
+    # --- REQUEST SMUGGLING ---
+    mkdir -p "$TARGET_SCAN_DIR/request_smuggling"
+    while read url; do
+        subdomain=$(echo "$url" | awk -F/ '{print $3}')
+        if [ -z "$subdomain" ]; then subdomain=$(echo "$url" | sed 's|https\?://||'); fi
+        smuggles "$url" > "$TARGET_SCAN_DIR/request_smuggling/${subdomain}.txt"
+    done < "$HTTP_SUBDOMAIN"
+
+    # --- DIRECTORY TRAVERSAL ---
+    mkdir -p "$TARGET_SCAN_DIR/directory_traversal"
+    while read url; do
+        subdomain=$(echo "$url" | awk -F/ '{print $3}')
+        if [ -z "$subdomain" ]; then subdomain=$(echo "$url" | sed 's|https\?://||'); fi
+        ffuf -w "$PAYLOADS_DIR/SecLists/Fuzzing/LFI/LFI-Jhaddix.txt" \
+            -u "${url}?file=FUZZ" \
+            -of csv \
+            -o "$TARGET_SCAN_DIR/directory_traversal/${subdomain}.csv" \
+            -mc all,-404
+    done < "$HTTP_SUBDOMAIN"
 done
